@@ -69,9 +69,23 @@ Here is a standard directory layout for a GenePattern module
     build-prerelease
     build-release
 
+# Edit Module Commands:
+
+    Use these commands to make edits directly to the manifest file. This is a proposed CLI alternative
+    to the module integrator.
+    
+    create-module <module-name>     Initialize a project for a new module
+    
+    set-docker-image                Set the docker image
+    set-command-line                Set the command line
+    
+    add-param  [PARAM_OPTIONS]      Add a new parameter
+    edit-param [PARAM_OPTIONS]      Change a parameter
+
 ```
 
 # TODO
 * combine with GpUnit, the mod-devkit and gpunit belong in the same project
 * document job.docker.image=[organization/]repository[:tag] naming conventions
 * document Semantic Versioning conventions and best practices
+* DocOpt integration (http://docopt.org/)
