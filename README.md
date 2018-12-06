@@ -24,7 +24,9 @@ Here is a standard directory layout for a GenePattern module
     gp module [OPTIONS] [COMMAND]
 
 # Options (from build.properties):
-    module.name, default: lowercase directory name (In bash: $ echo "${PWD##*/}" | tr '[:upper:]' '[:lower:]')
+
+    module.name, default: lowercase directory name 
+        In bash: `echo "${PWD##*/}" | tr '[:upper:]' '[:lower:]'`
         Example: dapple
     lsid.no_version, REQUIRED
         Example: urn:lsid:8080.gpbroad.broadinstitute.org:genepatternmodules:479
@@ -39,10 +41,12 @@ Here is a standard directory layout for a GenePattern module
         Example: "genepattern/dapple:v0.19-pre.3"
 
 # Commands:
+
     build-image, create a docker image from the ./docker/Dockerfile
     build-zip,   create the module.zip file
 
 # Commands wish list:
+
     tag-local,             create a snapshot release for testing locally
     tag-prerelease,        create a prerelease tag for testing on beta servers
     tag-release-candidate, create a release candidate tag
@@ -64,8 +68,10 @@ Here is a standard directory layout for a GenePattern module
     build-local-release
     build-prerelease
     build-release
+
 ```
 
 # TODO
 * combine with GpUnit, the mod-devkit and gpunit belong in the same project
-* document Semantic Versioning, best practices for versioning a module, including meta tags to show release status
+* document job.docker.image=[organization/]repository[:tag] naming conventions
+* document Semantic Versioning conventions and best practices
