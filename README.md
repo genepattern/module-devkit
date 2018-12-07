@@ -57,27 +57,19 @@ Here is a standard directory layout for a GenePattern module
 
 # Commands wish list:
 
-    tag-local,             create a snapshot release for testing locally
-    tag-prerelease,        create a prerelease tag for testing on beta servers
-    tag-release-candidate, create a release candidate tag
-    tag-release,           create a production release tag
+    build-local,      create a snapshot release for testing locally
+
+    tag-prerelease,   create a prerelease tag
+    tag-release,      create a production release tag
     
-    install-local, install local module.zip on local server
-    install-beta,  install module.zip on beta server
+    install-local,    install local module.zip on local server
+    install-beta,     install module.zip on beta server
     
-    test-in-container,  run gpunit tests directly in the docker container 
-    test-local,         run gpunit tests in local gp server
+    test-docker,      run gpunit tests directly in the docker container 
+    test-local,       run gpunit tests in local gp server
 
     push-to-gparc, 
     push-to-repo, 
-
-    release-local       build a module.zip for testing on a local GP server instance
-    build-release-candidate  build a module.zip for testing on a beta GP server
-    build-release            build a module.zip for deployment on a production GP server
-    
-    build-local-release
-    build-prerelease
-    build-release
 
 # Edit Module Commands:
 
