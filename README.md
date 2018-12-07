@@ -1,5 +1,15 @@
 # GenePattern Module Development Kit
 
+## Prerequisites
+This development kit requires that you have the following software installed on your development machine:
+* ant >= 1.8.1
+* git
+* GenePattern Server >= 3.9.11 for testing
+
+The GenePattern Team uses the following external resources to share artifacts with the user community:
+* github
+* dockerhub
+
 ## Module Project Directory Layout
 Here is a standard directory layout for a GenePattern module 
 
@@ -83,6 +93,11 @@ Here is a standard directory layout for a GenePattern module
     edit-param [PARAM_OPTIONS]      Change a parameter
 
 ```
+
+## Links
+### Git
+* [Git Basics](https://git-scm.com/book/en/v2/Getting-Started-Git-Basics)
+* [git-scm.com](https://git-scm.com)
 
 # TODO
 * combine with GpUnit, the mod-devkit and gpunit belong in the same project
