@@ -86,10 +86,27 @@ Here is a standard directory layout for a GenePattern module
 
 ```
 
+## Example docker commands
+To build the docker image
+```markdown
+# template
+
+    docker build -f Dockerfile . --tag {module-name}:v{module-version}
+
+# examples
+
+    docker build -f Dockerfile . --tag dapple
+    docker build -f Dockerfile . --tag dapple:v0.19
+    docker build -f Dockerfile . --tag genepattern/dapple:v0.19
+```
+
 ## Links
 ### Git
 * [Git Basics](https://git-scm.com/book/en/v2/Getting-Started-Git-Basics)
 * [git-scm.com](https://git-scm.com)
+
+### Docker commands
+* [docker build](https://docs.docker.com/engine/reference/commandline/build)
 
 # TODO
 * combine with GpUnit, the mod-devkit and gpunit belong in the same project
