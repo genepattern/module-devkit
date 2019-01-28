@@ -102,6 +102,7 @@ To build the docker image
 
 ## Links
 * [dockerhub/genepattern dashboard](https://cloud.docker.com/u/genepattern)
+* [GpUnit](https://github.com/broadinstitute/GpUnit)
 ### Git
 * [Git Basics](https://git-scm.com/book/en/v2/Getting-Started-Git-Basics)
 * [git-scm.com](https://git-scm.com)
