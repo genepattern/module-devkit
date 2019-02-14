@@ -109,6 +109,7 @@ To build the docker image
 * [git-scm.com](https://git-scm.com)
 
 ### Docker commands
+* [Dockerfile COPY command](https://docs.docker.com/engine/reference/builder/#copy)
 * [docker build](https://docs.docker.com/engine/reference/commandline/build)
 
 # TODO
