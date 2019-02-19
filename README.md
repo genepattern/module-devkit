@@ -100,8 +100,30 @@ To build the docker image
     docker build -f Dockerfile . --tag genepattern/dapple:v0.19
 ```
 
+## Dockerhub Integration
+To create a new DockerHub repository ...
+1. Log in to your Dockerhub account
+2. \[optional\] Connect to your organization (e.g. _genepattern_)
+3. Create a new repository
+
+   https://cloud.docker.com/u/{organization}/repository/create  
+   For example:  
+   ```
+    Name: genepattern/comparativemarkerselection
+    Description: Identify differentially expressed genes that can discriminate between distinct classes of samples.
+    Visibility: Public
+   ```  
+
+To enable automated builds ...
+
+4. Click the 'Builds' tab > Configure Automated Builds  
+  e.g.  
+  https://cloud.docker.com/u/genepattern/repository/docker/genepattern/comparativemarkerselection/builds  
+  https://cloud.docker.com/u/genepattern/repository/docker/genepattern/comparativemarkerselection/builds/edit  
+
 ## Links
 * [dockerhub/genepattern dashboard](https://cloud.docker.com/u/genepattern)
+* [dockerhub automated builds](https://docs.docker.com/docker-hub/builds/)
 * [GpUnit](https://github.com/broadinstitute/GpUnit)
 * [Semantic Versioning](https://semver.org)
 ### Git
