@@ -118,8 +118,10 @@ To enable automated builds ...
 
 4. Click the 'Builds' tab > Configure Automated Builds  
   e.g.  
-  https://cloud.docker.com/u/genepattern/repository/docker/genepattern/comparativemarkerselection/builds  
-  https://cloud.docker.com/u/genepattern/repository/docker/genepattern/comparativemarkerselection/builds/edit  
+  ```
+  https://cloud.docker.com/u/{organization}/repository/docker/{organization}/{repostiory-name}/builds  
+  https://cloud.docker.com/u/{organization}/repository/docker/{organization}/{repository-name}/builds/edit  
+  ```  
 
 ## Links
 * [dockerhub/genepattern dashboard](https://cloud.docker.com/u/genepattern)
