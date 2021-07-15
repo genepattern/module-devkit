@@ -1,0 +1,419 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="gp-module-devkit"
+    xmlns:if="ant:if"
+    xmlns:unless="ant:unless"
+>
+<?ignore
+
+?>
+
+    <!--
+      Macrodef: echo-value, print the value of the given property, 
+        with special handling for unset values.
+      Usage:
+        <echo-value pname="my-param" />
+    -->
+    <macrodef name="echo-value">
+        <attribute name="pname" />
+        <attribute name="pad" default="" />
+        <attribute name="rel" default="" />
+        <sequential>
+            <!-- echo if:set="@{pname}">@{pad}@{pname}=${@{pname}}</echo -->
+            <local name="pvalue" />
+            <property name="pvalue" value="${@{pname}}" relative="@{rel}" />
+            <echo if:set="@{pname}">@{pad}@{pname}=${pvalue}</echo>
+            <echo unless:set="@{pname}">@{pad}@{pname}=(not set)</echo>
+        </sequential>
+    </macrodef>
+
+    <!--
+      Macrodef: exec-cmd, run the command, 
+        with special handling for the 'dry-run' flag.
+      When 'dry-run' is set echo the command instead of running it.
+      Note: This does not wrap the args in quotes. 
+      For more verbose output use the '-v' (-verbose) command line arg.
+    -->
+    <macrodef name="exec-cmd">
+        <attribute name="executable" />
+        <attribute name="dir" default="${basedir}" />
+        <attribute name="failonerror" default="false" />
+        <!-- attribute name="outputproperty" default="" / -->
+        <attribute name="dry-run" default="${dry-run}" />
+        <element name="exec-args" implicit="yes" />
+
+        <sequential> 
+            <!-- if dry-run, echo the command line -->
+            <local name="dry-run.out" />
+            <exec if:true="@{dry-run}" 
+                executable="echo" outputproperty="dry-run.out"
+            >
+                <arg value="@{executable}" />
+                <exec-args />
+            </exec>
+            <echo if:true="@{dry-run}" 
+                message="(dry-run)${line.separator}${dry-run.out}" />
+
+            <!-- by default, run the command -->
+            <exec unless:true="@{dry-run}" 
+                executable="@{executable}" dir="@{dir}" failonerror="@{failonerror}" 
+            >
+                <exec-args />
+            </exec>
+        </sequential>
+    </macrodef>
+
+    <!-- 
+      Convenience target to set the dry-run flag from the command line
+      Usage:
+          ant dry-run {actual-target}
+          
+      Note: You must implement dry-run into your targets and tasks.
+      See the 'exec-cmd' macrodef for an example.
+    -->
+    <target name="dry-run" 
+        description="set dry-run flag, e.g. ant dry-run build-docker-image"
+    >
+        <property name="dry-run" value="true" />
+    </target>
+
+    <!--
+      debug 'dry-run' target
+      Usage:
+        ant dry-run         test-dry-run
+        ant -Ddry-run=true  test-dry-run
+        ant -Ddry-run=false test-dry-run
+        ant -Ddry-run=""    test-dry-run
+    -->
+    <target name="debug-dry-run">
+        <echo     if:set="dry-run"     >'dry-run' is set, dry-run='${dry-run}'</echo>
+        <echo unless:set="dry-run"     >'dry-run' is not set</echo>
+        <echo     if:true="${dry-run}" >'dry-run' is true</echo>
+        <echo unless:true="${dry-run}" >'dry-run' is not true</echo>
+    </target>
+
+    <target name="mod-devkit-default" depends="help" 
+        description="by default run the 'help' target"
+    />
+
+    <target name="init" depends="init-core, init-manifest" />
+    <target name="init-core">
+        <tstamp />
+        <!-- the location of the build output directory -->
+        <property name="build.output.dir" location="build" />
+
+        <!-- load the 'build.properties' file -->
+        <property name="build.properties.file" location="build.properties" />
+        <property file="${build.properties.file}" />
+        <!-- the location of the taskLib files -->
+        <property name="module.dir" location="module" />
+        <!-- the location of the manifest file -->
+        <property name="manifest.file" location="${module.dir}/manifest" />
+        <!-- the location of the docker files -->
+        <property name="docker.dir" location="docker" />
+        <property name="docker.file" location="${docker.dir}/Dockerfile" />
+        <!-- the location of the gpunit test cases -->
+        <property name="test.dir" location="gpunit" />
+        <!-- the tests to run -->
+        <property name="test.includes" value="**" />
+        <!-- output directory for gpunit test report -->
+        <property name="test.report.dir" location="${build.output.dir}/reports" />
+
+        <!-- check for docker.dir -->
+        <available file="${docker.dir}"  type="dir"  property="dockerdir.exists" />
+        <available file="${docker.file}" type="file" property="dockerfile.exists" />
+    </target>
+    
+    <!-- initialize properties from the manifest file -->
+    <target name="init-manifest" depends="init-core">
+        <property file="${manifest.file}" prefix="manifest" />
+    </target>
+    
+    <target name="init-local-server">
+        <property name="gp.url" value="http://127.0.0.1:8080" />
+        <property name="gp.user" value="local" />
+        <property name="gp.password" value="local" />
+    </target>
+
+    <!-- add or edit LSID in the manifest file -->
+    <target name="set-lsid" depends="init" if:set="LSID">
+        <propertyfile file="${manifest.file}">
+            <entry key="LSID" value="${LSID}" />
+        </propertyfile>
+    </target>
+
+    <!-- add or edit 'job.docker.image' in the manifest file -->
+    <target name="set-docker-image" if:set="job.docker.image"
+    >
+        <propertyfile file="${manifest.file}">
+            <entry key="job.docker.image" value="${job.docker.image}" />
+        </propertyfile>
+    </target>
+
+    <!-- workaround for unnecessary escapes, '\:' -->
+    <target name="unescape-manifest" depends="init, unescape-lsid, unescape-docker-image" />
+    <target name="unescape-lsid" if:set="LSID">
+        <replaceregexp file="${manifest.file}" byline="true" 
+            match="LSID=.*" replace="LSID=${LSID}" />
+    </target>
+    <target name="unescape-docker-image" if:set="job.docker.image">
+        <replaceregexp file="${manifest.file}" byline="true" 
+            match="job\.docker\.image=.*" 
+            replace="job\.docker\.image=${job.docker.image}" />
+    </target>
+
+    <target name="update-manifest" depends="init, set-lsid, set-docker-image, unescape-manifest"
+        description="update the manifest file with values from 'build.properties'"
+    />
+
+    <!--
+      Build the local docker image
+    --><?code
+      Examples:
+        docker build -f Dockerfile . --tag comparativemarkerselection
+        docker build -f Dockerfile . --tag comparativemarkerselection:v10.2
+        docker build -f Dockerfile . --tag genepattern/comparativemarkerselection:v10.2
+    ?>
+    <target name="build-docker-image" depends="init" if="dockerfile.exists"
+        description="build the docker image from the 'docker.file' (default: ./docker/Dockerfile)"
+    >
+        <fail unless="docker.file" message="Missing required property: docker.file" />
+        <available file="${docker.file}" property="dockerfile.exists" />
+        <fail unless="dockerfile.exists" message="Missing required file: '${docker.file}' does not exist" />
+
+        <fail unless="job.docker.image" message="Missing required property: job.docker.image" />
+
+        <exec-cmd executable="docker" dir="${docker.dir}" >
+            <arg value="build" />
+            <arg value="-f" />
+            <arg value="${docker.file}" />
+            <arg value="." />
+            <arg value="--tag" /> 
+            <arg value="${job.docker.image}" />
+        </exec-cmd>
+    </target>
+
+    <!-- 
+      Build the module zip file.
+      
+      Note: edit the 'zip' task as needed to include/exclude all files which 
+        belong in the zip file that is added to the GenePattern Module repository.
+    -->
+    <target name="create-zip-local" depends="update-manifest"
+        description="build the module.zip file"
+    >
+        <property name="zip.filename" value="${module.name}_${tag}.zip" />
+        <zip destfile="${build.output.dir}/${zip.filename}" whenempty="fail" defaultexcludes="true">
+            <fileset dir="${module.dir}" />
+        </zip>
+    </target>
+
+    <!--
+      test-local
+        run gpunit tests on a local server
+        
+      prerequisites:
+        GpUnit is installed
+        ${gpunit.dir}/bin is on the path
+        module.zip is built
+        module.zip is installed on the local server
+        workflow:
+          $ ant create-zip-local
+          (from web GUI) Modules - Install from zip 
+          $ ant [-Dtest.includes=**/example.yaml] test-local
+          # view the results
+          $ open build/reports/current/html/index.html
+          
+      configuration:
+        set custom GpUnit properties in the ./gpunit/gpunit.properties file
+    -->
+    <target name="test-local" depends="init, init-local-server"
+        description="run gpunit tests on a local server"
+    >
+        <property name="test.target" value="gpunit" />
+        <property name="test.includes" value="**/example.yaml" />
+        <exec executable="gpunit" dir="${test.dir}" >
+            <arg value="-Dgp.url=${gp.url}" />
+            <arg value="-Dgp.user=${gp.user}" />
+            <arg value="-Dgp.password=${gp.password}" />
+            <arg value="-Dgpunit.testfolder=${test.dir}" />
+            <arg value="-Dgpunit.includes=${test.includes}" />
+            <arg value="-Dreport.dir=${test.report.dir}" />
+            <arg line="${test.target}" />
+        </exec>
+    </target>
+    
+    <!-- 
+    ===================================================== 
+      Git Utilities
+    ===================================================== 
+    -->
+    <macrodef name="git-exec">
+        <attribute name="dir" default="${basedir}" />
+        <attribute name="failonerror" default="true" />
+        <element name="args" />
+        <sequential>
+            <exec-cmd executable="git" dir="@{dir}" failonerror="@{failonerror}">
+                <args />
+            </exec-cmd>
+        </sequential>
+    </macrodef>
+    
+    <?template: 
+      git --version 
+    ?>
+    <macrodef name="git-version">
+        <sequential>
+        <git-exec>
+            <args>
+                <arg value="--version" />
+            </args>
+        </git-exec>
+        </sequential>
+    </macrodef>
+    
+    <target name="git-check-version">
+      <git-version />
+    </target>
+    
+    <?template: 
+      git tag -a {tag} -m {message} 
+    ?>
+    <macrodef name="git-tag-local">
+      <attribute name="tag" />
+      <attribute name="message" />
+      <sequential>
+        <!-- create the tag -->
+        <git-exec><args>
+          <arg value="tag" />
+          <arg value="-a"/>
+          <arg value="@{tag}"/>
+          <arg value="-m"/>
+          <arg value="@{message}"/>
+        </args></git-exec>
+      </sequential>
+    </macrodef>
+
+    <?template: 
+      git push {remote} {tag} 
+    ?>
+    <macrodef name="git-tag-remote">
+      <attribute name="remote" default="origin" />
+      <attribute name="tag" />
+      <sequential>
+        <!-- push the tag to the remote repo -->
+        <git-exec><args>
+          <arg value="push" />
+          <arg value="@{remote}"/>
+          <arg value="@{tag}"/>
+        </args></git-exec>
+      </sequential>
+    </macrodef>
+
+    <target name="prompt-for-message" depends="init">
+        <echo message="Promting for 'git tag -a {tag} -m {message}" />
+        <input message="Please enter tag:"
+            addproperty="git.tag"
+            defaultvalue="${tag}"
+        />
+        <input message="Please enter message:"
+            addproperty="git.message"
+            defaultvalue="${manifest.version}"
+        />
+        <echo-value pname="git.tag" />
+        <echo-value pname="git.message" />
+    </target>
+    
+    <target name="git-tag" depends="init, prompt-for-message"
+        description="tag this repository"
+    >
+        <!-- create the git tag localy -->
+        <git-tag-local tag="${git.tag}" message="${git.message}" />
+        <!-- push the tag to the remote repo -->
+        <git-tag-remote tag="${git.tag}" />
+    </target>
+
+    <!-- 
+    ===================================================== 
+      Release Module 
+    ===================================================== 
+      based on releaseModule.xml
+      https://github.com/broadinstitute/genepattern_modules.git
+      
+      Jenkins > GP_Modules > Release_GenePattern_Module job
+      Usage:
+        ant -f genepattern_modules/releaseModule.xml 
+            -Dmodule.repo.dir=../$Module_Repository_Name
+            -Dmodule.name=$Module_Dir_Name
+            -Doverride.expectedUrlCheck=true
+        [prereleaseModule | releaseModule]
+    -->
+
+    <target name="help" depends="init"
+        description="show Module Development Kit help message"
+    >
+        <echo-value pname="ant.project.name" />
+        <echo> 
+--------------------
+  project paths
+--------------------</echo>
+        <echo-value pname="basedir" />
+        <echo-value pad="    " rel="true" pname="module.dir" />
+        <echo-value pad="    " rel="true" pname="manifest.file" />
+        <echo-value pad="    " rel="true" pname="docker.dir" />
+        <echo-value pad="    " rel="true" pname="docker.file" />
+        <echo-value pad="    " rel="true" pname="test.dir" />
+        <echo-value pad="    " pname="test.includes" />
+        <echo-value pad="    " rel="true" pname="test.report.dir" />
+        <echo-value pad="    " rel="true" pname="build.output.dir" />
+        <echo> 
+--------------------
+  build.properties
+--------------------</echo>
+        <echo-value pname="build.properties.file" />
+        <echo-value pad="    " pname="module.name" />
+        <echo-value pad="    " pname="module.name.lower" />
+        <echo-value pad="    " pname="lsid.no_version" />
+        <echo-value pad="    " pname="lsid.version" />
+        <echo-value pad="    " pname="build.id" />
+        <echo-value pad="    " pname="tag" />
+        <echo-value pad="    " pname="LSID" />
+        <echo-value pad="    " pname="dockerhub.organization" />
+        <echo-value pad="    " pname="job.docker.image" />
+        <echo> 
+--------------------
+  manifest.properties
+--------------------</echo>
+        <echo-value pname="manifest.version" />
+        
+    </target>
+    
+    <!--
+      informational target, show details about the git tag for the module.
+      
+      Links:
+        * https://git-scm.com/docs/gitrevisions
+        * https://git-scm.com/docs/git-show-ref
+        * https://stackoverflow.com/questions/15472107/when-listing-git-ls-remote-why-theres-after-the-tag-name
+        
+      Examples:--><?code
+        git show-ref --tags
+        git ls-remote --tags
+      ?>
+    <!-- -->
+    <target name="show-git-tag" depends="init"
+        description="show git tags"
+    >
+        <git-exec><args>
+            <arg value="show-ref" />
+            <arg value="--tags" />
+        </args></git-exec>
+
+    </target>
+
+    <!--
+      for debugging
+    -->
+    <target name="debug" depends="init"> 
+        <echoproperties />
+    </target> 
+</project>
